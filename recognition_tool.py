@@ -75,7 +75,7 @@ class Window(QMainWindow):
         model_f = 'cnn_handwritten_recog.h5'
         self.cur_model = load_model(model_f)
 
-        image_data = cv2.imread('downloaded_digit.png')
+        image_data = cv2.imread('handwritten_digit.png')
         image_data =cv2.cvtColor(image_data,cv2.COLOR_BGR2GRAY)
         image_data = np.asarray(image_data)  
         image_data = cv2.resize(image_data,(28,28))
@@ -94,7 +94,7 @@ class Window(QMainWindow):
 
     def keyPressEvent(self, qKeyEvent):
         if qKeyEvent.key() == Qt.Key_Return:
-            self.image.save('downloaded_digit.png')
+            self.image.save('handwritten_digit.png')
             self.predict_drawing()
 
 
