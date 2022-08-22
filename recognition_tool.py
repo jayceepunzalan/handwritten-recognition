@@ -16,7 +16,7 @@ class Window(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Handwritten Digit Recognition Tool")
-        self.setGeometry(100, 100, 800, 600)
+        self.setGeometry(1200, 800, 1000, 800)
         self.image = QImage(self.size(), QImage.Format_RGB32)
         self.image.fill(Qt.black)
 
