@@ -22,7 +22,7 @@ class Window(QMainWindow):
 
         # variables
         self.drawing = False
-        self.brushSize = 36
+        self.brushSize = 24
         self.brushColor = Qt.white
 
         self.lastPoint = QPoint()
