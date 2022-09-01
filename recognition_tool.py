@@ -16,7 +16,7 @@ class Window(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Handwritten Digit Recognition Tool")
-        self.setGeometry(1200, 800, 1000, 800)
+        self.setGeometry(200, 200, 1000, 800)
         self.image = QImage(self.size(), QImage.Format_RGB32)
         self.image.fill(Qt.black)
 
@@ -24,6 +24,7 @@ class Window(QMainWindow):
         self.drawing = False
         self.brushSize = 24
         self.brushColor = Qt.white
+        self.image_filename = 'handwritten_digit.png'
 
         self.lastPoint = QPoint()
 
@@ -44,6 +45,7 @@ class Window(QMainWindow):
             self.drawing = True
             self.lastPoint = event.pos()
 
+
     # method for tracking mouse activity
     def mouseMoveEvent(self, event):
         # checking if left button is pressed and drawing flag is true
@@ -55,46 +57,121 @@ class Window(QMainWindow):
             self.lastPoint = event.pos()
             self.update()
 
+
     # method for mouse left button release
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.drawing = False
+
 
     # paint event
     def paintEvent(self, event):
         canvasPainter = QPainter(self)
         canvasPainter.drawImage(self.rect(), self.image, self.image.rect())
 
+
     # method for clearing every thing on canvas
     def clear(self):
         self.image.fill(Qt.black)
         self.update()
 
-    # method for predicting the handwrittend digit
-    def predict_drawing(self):
+
+    # method for removing existing region of 
+    # interest (ROI) images in directory
+    def delete_existing_roi(self):
+        for file in os.listdir('./'):
+            if file.startswith('roi') and file.endswith('.png'):
+                os.remove(file)
+
+
+    # method for preprocessing handwritten image
+    def predict_image(self, image):
         model_f = 'cnn_handwritten_recog.h5'
         self.cur_model = load_model(model_f)
 
-        image_data = cv2.imread('handwritten_digit.png')
-        image_data =cv2.cvtColor(image_data,cv2.COLOR_BGR2GRAY)
+        image_data = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
         image_data = np.asarray(image_data)  
         image_data = cv2.resize(image_data,(28,28))
         image_data = np.array(image_data).reshape(-1,28,28,1)
         image_data = image_data/255.0
-
+        
         prediction = self.cur_model.predict(image_data)
-        self.show_popup(prediction)
+        predicted_digit = np.argmax(prediction)
+
+        return predicted_digit
+
+
+    # method for counting objects in an image
+    def image_segmentation(self, image):
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        blur_image = cv2.GaussianBlur(gray_image, (7,7), 0)
+        ret, thresh2 = cv2.threshold(blur_image, 200, 255, cv2.THRESH_BINARY)
+        # Find Canny edges
+        edged = cv2.Canny(thresh2, 100, 200)
+
+        # Finding Contours
+        # Use a copy of the image e.g. edged.copy() 
+        # since findContours alters the image
+        contours, hierarchy = cv2.findContours(edged.copy(), 
+            cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+        print("Number of Contours found = " + str(len(contours)))
+
+        return contours
+
+
+    # method for predicting the handwritten digit
+    def predict_drawing(self):
+        image = cv2.imread(self.image_filename)
+        contours = self.image_segmentation(image)
+
+        self.predicted_digit_list = []
+
+        orig = image.copy()
+        i = 0
+
+        for cnt in contours:
+            # Filtered countours are detected
+            x,y,w,h = cv2.boundingRect(cnt)
+            x = x - 30
+            y = y - 30
+            w = w + 60
+            h = h + 60
+
+            # Taking ROI of the cotour
+            roi = orig[y:y+h, x:x+w]
+            roi = cv2.resize(roi, (400,400))
+
+            # Save your contours or characters
+            cv2.imwrite("roi" + str(i) + ".png", roi)
+            print('image successfully saved')
+            print()
+            i = i + 1 
+
+        for i in range(len(contours)):
+            image = cv2.imread("roi" + str(i) + ".png")
+
+        for i in range(len(contours)):
+            image = cv2.imread("roi" + str(i) + ".png")
+            predicted_digit = self.predict_image(image)
+            self.predicted_digit_list.append(predicted_digit)
+
+        self.delete_existing_roi()
+        self.show_popup(self.predicted_digit_list)
+
 
     def show_popup(self, prediction):
         msg = QMessageBox()
         msg.setWindowTitle("Prediction result")
-        msg.setText(f'The predicted image is: {np.argmax(prediction)}')
+        predicted_final = ''.join(str(digit) for digit in prediction)
+        msg.setText(f'The predicted image is: {predicted_final}')
         msg.setIcon(QMessageBox.Information)
         msg.exec()
 
+
     def keyPressEvent(self, qKeyEvent):
         if qKeyEvent.key() == Qt.Key_Return:
-            self.image.save('handwritten_digit.png')
+            self.image.save(self.image_filename)
             self.predict_drawing()
 
 
