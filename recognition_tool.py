@@ -2,12 +2,13 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-import sys
+
 import os
 import cv2
+import sys
 import numpy as np
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 from keras.models import load_model
 
 # window class
@@ -120,17 +121,28 @@ class Window(QMainWindow):
         return contours
 
 
+    # method for sorting objects from left-to-right
+    def sort_contours(self, contours):
+        i = 0
+        boundingBoxes = [cv2.boundingRect(c) for c in contours]
+        (contours, boundingBoxes) = zip(*sorted(zip(contours, boundingBoxes),
+            key=lambda b:b[1][i], reverse=False))
+
+        return contours
+
+
     # method for predicting the handwritten digit
     def predict_drawing(self):
         image = cv2.imread(self.image_filename)
         contours = self.image_segmentation(image)
+        sorted_contours = self.sort_contours(contours)
 
         self.predicted_digit_list = []
 
         orig = image.copy()
         i = 0
 
-        for cnt in contours:
+        for cnt in sorted_contours:
             # Filtered countours are detected
             x,y,w,h = cv2.boundingRect(cnt)
             x = x - 30
@@ -148,10 +160,10 @@ class Window(QMainWindow):
             print()
             i = i + 1 
 
-        for i in range(len(contours)):
+        for i in range(len(sorted_contours)):
             image = cv2.imread("roi" + str(i) + ".png")
 
-        for i in range(len(contours)):
+        for i in range(len(sorted_contours)):
             image = cv2.imread("roi" + str(i) + ".png")
             predicted_digit = self.predict_image(image)
             self.predicted_digit_list.append(predicted_digit)
