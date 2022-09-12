@@ -26,7 +26,7 @@ Install dependencies
   pip install -r requirements.txt
 ```
 
-Start the server
+Start the tool
 
 ```bash
   python recognition-tool.py
