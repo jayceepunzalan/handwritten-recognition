@@ -1,0 +1,4 @@
+keras==2.9.0
+numpy==1.21.6
+opencv_python==4.6.0.66
+PyQt5==5.15.7
