@@ -156,8 +156,6 @@ class Window(QMainWindow):
 
             # Save your contours or characters
             cv2.imwrite("roi" + str(i) + ".png", roi)
-            print('image successfully saved')
-            print()
             i = i + 1 
 
         for i in range(len(sorted_contours)):
