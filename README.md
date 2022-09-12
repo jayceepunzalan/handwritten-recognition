@@ -29,6 +29,6 @@ Install dependencies
 Start the tool
 
 ```bash
-  python recognition-tool.py
+  python recognition_tool.py
 ```
 
