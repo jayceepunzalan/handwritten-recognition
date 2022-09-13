@@ -29,4 +29,8 @@ Start the tool
 ```bash
   python recognition_tool.py
 ```
+_**Note:** After inputting handwritten digit/s, press Enter key to start the prediction._
 
+## Demo
+
+![Alt text](https://github.com/jayceepunzalan/handwritten-recognition/blob/main/handwritten_demo.gif)
